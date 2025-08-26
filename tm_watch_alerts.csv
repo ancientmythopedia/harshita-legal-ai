@@ -1,6 +1,0 @@
-FilingDate,Mark,Class,Applicant,ApplicationNo,MatchedKeyword,Similarity
-2025-07-15,Brand-Ex,30,SnackCo Ltd,TM-2025-1002,brandx,0.714
-2025-07-15,Brand-Ex,30,SnackCo Ltd,TM-2025-1002,brand-ex,0.75
-2025-07-11,MediKare,5,MediHealth Pvt,TM-2025-1006,medicare,0.75
-2025-07-11,MediKare,5,MediHealth Pvt,TM-2025-1006,medi-care,0.706
-2025-07-05,PowerMaxX,12,MaxMotors Ltd,TM-2025-1010,powermax,0.706
