@@ -62,6 +62,28 @@ st.sidebar.header("Settings")
 lead_days = st.sidebar.number_input("Renewal lead time (days)", min_value=1, max_value=365, value=60)
 sim_threshold = st.sidebar.slider("Similarity threshold for watch", 0.0, 1.0, 0.75, 0.01)
 
+
+
+# --- Load defaults from Streamlit secrets ---
+smtp_defaults = {
+    "SMTP_SERVER": st.secrets.get("SMTP_SERVER", ""),
+    "SMTP_PORT": int(st.secrets.get("SMTP_PORT", 587)),
+    "SMTP_USER": st.secrets.get("SMTP_USER", ""),
+    "SMTP_PASS": st.secrets.get("SMTP_PASS", ""),
+    "FROM_NAME": st.secrets.get("FROM_NAME", "Harshita Legal AI Team"),
+    "FROM_EMAIL": st.secrets.get("FROM_EMAIL", ""),
+}
+
+with st.expander("Optional: Send reminder emails now (SMTP)"):
+    smtp_server = st.text_input("SMTP Server", value=smtp_defaults["SMTP_SERVER"])
+    smtp_port   = st.number_input("SMTP Port", value=smtp_defaults["SMTP_PORT"])
+    smtp_user   = st.text_input("SMTP Username (email address)", value=smtp_defaults["SMTP_USER"])
+    smtp_pass   = st.text_input("SMTP Password / App Password", type="password", value=smtp_defaults["SMTP_PASS"])
+    from_name   = st.text_input("From Name", value=smtp_defaults["FROM_NAME"])
+    from_email  = st.text_input("From Email", value=smtp_defaults["FROM_EMAIL"])
+
+
+
 # ---------- 1) Portfolio & Renewals ----------
 st.header("1) Upload IP Portfolio")
 portfolio_file = st.file_uploader("Upload ip_portfolio_template.xlsx (or your own with same columns)", type=["xlsx"], key="portfolio")
@@ -160,6 +182,7 @@ if portfolio is not None:
                                 st.write(f"Error sending to {to_email}: {e}")
                                 fail += 1
                         st.success(f"Emails sent: {success}, failed: {fail}")
+
 
 # ---------- 2) Trademark Watch ----------
 st.header("2) Trademark Watch (Prototype)")
