@@ -1,5 +1,7 @@
 
 import streamlit as st
+import os
+import streamlit as st
 import pandas as pd
 from io import BytesIO
 from datetime import datetime
@@ -65,22 +67,50 @@ sim_threshold = st.sidebar.slider("Similarity threshold for watch", 0.0, 1.0, 0.
 
 
 # --- Load defaults from Streamlit secrets ---
-smtp_defaults = {
-    "SMTP_SERVER": st.secrets.get("SMTP_SERVER", ""),
-    "SMTP_PORT": int(st.secrets.get("SMTP_PORT", 587)),
-    "SMTP_USER": st.secrets.get("SMTP_USER", ""),
-    "SMTP_PASS": st.secrets.get("SMTP_PASS", ""),
-    "FROM_NAME": st.secrets.get("FROM_NAME", "Harshita Legal AI Team"),
-    "FROM_EMAIL": st.secrets.get("FROM_EMAIL", ""),
-}
+# ---- 1) Load SMTP defaults (secrets → env → fallback) ----
+def load_smtp_defaults():
+    def G(key, default=""):
+        # Prefer secrets; then env var; else default
+        v = st.secrets.get(key) if hasattr(st, "secrets") else None
+        if v is None or v == "":
+            v = os.getenv(key, default)
+        return v
 
-with st.expander("Optional: Send reminder emails now (SMTP)"):
-    smtp_server = st.text_input("SMTP Server", value=smtp_defaults["SMTP_SERVER"])
-    smtp_port   = st.number_input("SMTP Port", value=smtp_defaults["SMTP_PORT"])
-    smtp_user   = st.text_input("SMTP Username (email address)", value=smtp_defaults["SMTP_USER"])
-    smtp_pass   = st.text_input("SMTP Password / App Password", type="password", value=smtp_defaults["SMTP_PASS"])
-    from_name   = st.text_input("From Name", value=smtp_defaults["FROM_NAME"])
-    from_email  = st.text_input("From Email", value=smtp_defaults["FROM_EMAIL"])
+    return {
+        "SMTP_SERVER": G("SMTP_SERVER"),
+        "SMTP_PORT": int(G("SMTP_PORT", 587) or 587),
+        "SMTP_USER": G("SMTP_USER"),
+        "SMTP_PASS": G("SMTP_PASS"),
+        "FROM_NAME": G("FROM_NAME", "Harshita Legal AI Team"),
+        "FROM_EMAIL": G("FROM_EMAIL"),
+    }
+
+smtp_defaults = load_smtp_defaults()
+
+# ---- 2) Seed session_state once (so reruns don't clear the form) ----
+for k, v in {
+    "smtp_server": smtp_defaults["SMTP_SERVER"],
+    "smtp_port": smtp_defaults["SMTP_PORT"],
+    "smtp_user": smtp_defaults["SMTP_USER"],
+    "smtp_pass": smtp_defaults["SMTP_PASS"],
+    "from_name": smtp_defaults["FROM_NAME"],
+    "from_email": smtp_defaults["FROM_EMAIL"],
+}.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# ---- 3) The form (now prefilled & sticky) ----
+with st.expander("Optional: Send reminder emails now (SMTP)", expanded=False):
+    smtp_server = st.text_input("SMTP Server", key="smtp_server")
+    smtp_port   = st.number_input("SMTP Port", step=1, key="smtp_port")
+    smtp_user   = st.text_input("SMTP Username (email address)", key="smtp_user")
+    smtp_pass   = st.text_input("SMTP Password / App Password", type="password", key="smtp_pass")
+    from_name   = st.text_input("From Name", key="from_name")
+    from_email  = st.text_input("From Email", key="from_email")
+
+# (Optional) tiny health check without exposing secrets
+loaded = bool(smtp_defaults["SMTP_SERVER"]) and bool(smtp_defaults["SMTP_USER"])
+st.caption(f"SMTP defaults loaded: {'✅' if loaded else '⚠️ None found'}")
 
 
 
